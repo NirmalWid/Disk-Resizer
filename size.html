@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Disk Resize Calculator</title>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background:
+                linear-gradient(135deg, rgba(55, 224, 21, 0.377), rgba(67, 118, 76, 0)),
+                url('bg.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeInBody 1s ease-in;
+        }
+
+        @keyframes fadeInBody {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .container {
+            background: #22191980;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(3, 235, 34, 0.363);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.95);
+            animation: zoomIn 0.8s ease forwards;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        p {
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin: 10px 0 5px;
+            font-weight: bold;
+            color: #eee;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            box-shadow: 0 0 10px #08ec1350;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 10px;
+            background-color: #00b894;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.15s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 184, 148, 0.3);
+            user-select: none;
+        }
+
+        button:hover {
+            transform: scale(1.08);
+            background-color: #019875;
+            box-shadow: 0 6px 12px rgba(1, 152, 117, 0.6);
+        }
+
+        button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(1, 152, 117, 0.8);
+            transition: transform 0.1s ease;
+        }
+
+        .reset-btn {
+            background-color: #d63031;
+            box-shadow: 0 4px 8px rgba(214, 48, 49, 0.3);
+            transition: background-color 0.3s ease, transform 0.15s ease, box-shadow 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background-color: #b52b27;
+            box-shadow: 0 6px 12px rgba(181, 43, 39, 0.6);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(181, 43, 39, 0.8);
+            transition: transform 0.1s ease;
+        }
+
+        #result {
+            margin-top: 20px;
+            background: rgba(39, 38, 38, 0.63);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            color: black;
+            display: none;
+            animation: fadeSlideIn 0.8s ease forwards;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            margin: 15px 0;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #00ff90;
+            transition: width 0.8s ease, background-color 0.8s ease;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Disk Resize Calculator</h2>
+        <p style="color: white;">Calculate the new disk size so that used space becomes 70% of total</p>
+
+        <label for="totalSize">Total Size (GB):</label>
+        <input type="number" id="totalSize" placeholder="60 GB" min="1">
+
+        <label for="freeSpace">Free Space (GB):</label>
+        <input type="number" id="freeSpace" placeholder="5 GB" min="0">
+
+        <div class="button-group">
+            <button onclick="calculateNewSize()">Calculate</button>
+            <button class="reset-btn" onclick="resetFields()">Reset</button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function calculateNewSize() {
+            const totalSize = parseFloat(document.getElementById("totalSize").value);
+            const freeSpace = parseFloat(document.getElementById("freeSpace").value);
+            const resultDiv = document.getElementById("result");
+            const progressBar = document.getElementById("progressBar");
+
+            // Validation
+            if (isNaN(totalSize) || isNaN(freeSpace) || totalSize <= 0 || freeSpace < 0) {
+                resultDiv.innerHTML =
+                    `<div style="color: black; line-height: 2;">
+                        <strong>⚠️ Please enter valid positive numbers.</strong>
+                    </div>`;
+                resultDiv.style.display = "block";
+                progressBar.style.width = "0%";
+                return;
+            }
+
+            if (totalSize < freeSpace) {
+                resultDiv.innerHTML =
+                    `<div style="color: black; line-height: 2;">
+                        <strong>⚠️ Total size must be greater than or equal to free space.</strong>
+                    </div>`;
+                resultDiv.style.display = "block";
+                progressBar.style.width = "0%";
+                return;
+            }
+
+            const usedSpace = totalSize - freeSpace;
+            const usagePercent = (usedSpace / totalSize) * 100;
+
+            // Update Progress Bar
+            progressBar.style.width = `${usagePercent}%`;
+            if (usagePercent <= 70) {
+                progressBar.style.backgroundColor = "#00ff90"; // Green
+            } else if (usagePercent <= 85) {
+                progressBar.style.backgroundColor = "#f1c40f"; // Yellow
+            } else {
+                progressBar.style.backgroundColor = "#e74c3c"; // Red
+            }
+
+            // Already enough free space check
+            if (usagePercent <= 70) {
+                resultDiv.innerHTML =
+                    `<div style="color: #00ff90; line-height: 1.6; font-size: 16px;">
+                        ℹ️ <strong>Your disk already has enough free space (${usagePercent.toFixed(1)}% used).</strong><br>
+                        No need to increase the total size.
+                    </div>`;
+                resultDiv.style.display = "block";
+                resultDiv.style.animation = "fadeSlideIn 0.8s ease";
+                return;
+            }
+
+            // Calculate new size
+            const newSize = usedSpace / 0.7;
+            const roundedSize = Math.ceil(newSize);
+            const additionalSpace = roundedSize - totalSize;
+
+            resultDiv.innerHTML =
+                `<div style="color: white; line-height: 1; font-size: 18px;">
+                    📊 <strong>Current usage: ${usagePercent.toFixed(1)}%</strong><br><br>
+                    ✅ <strong>New required total size: ${roundedSize} GB</strong><br><br>
+                    📈 <strong>Increase by: ${additionalSpace} GB</strong>
+                </div>`;
+
+            resultDiv.style.display = "block";
+            resultDiv.style.animation = "fadeSlideIn 0.8s ease";
+        }
+
+        function resetFields() {
+            document.getElementById("totalSize").value = '';
+            document.getElementById("freeSpace").value = '';
+            const resultDiv = document.getElementById("result");
+            const progressBar = document.getElementById("progressBar");
+            resultDiv.innerHTML = '';
+            resultDiv.style.display = "none";
+            progressBar.style.width = "0%";
+        }
+    </script>
+
+</body>
+
+</html>
