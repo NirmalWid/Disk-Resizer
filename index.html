@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Disk Resize Calculator</title>
     <link rel="icon" type="image/png" href="favicon.png" />
+
     <style>
         * {
             box-sizing: border-box;
@@ -200,13 +202,38 @@
 
     <div class="container">
         <h2>Disk Resize Calculator</h2>
-        <p style="color: white;">Calculate the new disk size so that used space becomes 70% of total</p>
+        <p style="color: white;">
+            Calculate the new disk size based on your target usage percentage.
+        </p>
 
         <label for="totalSize">Total Size (GB):</label>
-        <input type="number" id="totalSize" placeholder="60 GB" min="1">
+        <input
+            type="number"
+            id="totalSize"
+            placeholder="60 GB"
+            min="1"
+            step="any"
+        >
 
         <label for="freeSpace">Free Space (GB):</label>
-        <input type="number" id="freeSpace" placeholder="5 GB" min="0">
+        <input
+            type="number"
+            id="freeSpace"
+            placeholder="5 GB"
+            min="0"
+            step="any"
+        >
+
+        <label for="targetUsage">Target Usage (%):</label>
+        <input
+            type="number"
+            id="targetUsage"
+            placeholder="70%"
+            value="70"
+            min="1"
+            max="100"
+            step="any"
+        >
 
         <div class="button-group">
             <button onclick="calculateNewSize()">Calculate</button>
@@ -222,81 +249,136 @@
 
     <script>
         function calculateNewSize() {
-            const totalSize = parseFloat(document.getElementById("totalSize").value);
-            const freeSpace = parseFloat(document.getElementById("freeSpace").value);
+            const totalSize = parseFloat(
+                document.getElementById("totalSize").value
+            );
+
+            const freeSpace = parseFloat(
+                document.getElementById("freeSpace").value
+            );
+
+            const targetUsage = parseFloat(
+                document.getElementById("targetUsage").value
+            );
+
             const resultDiv = document.getElementById("result");
             const progressBar = document.getElementById("progressBar");
 
-            // Validation
-            if (isNaN(totalSize) || isNaN(freeSpace) || totalSize <= 0 || freeSpace < 0) {
-                resultDiv.innerHTML =
-                    `<div style="color: black; line-height: 2;">
-                        <strong>⚠️ Please enter valid positive numbers.</strong>
-                    </div>`;
+            // Validate input values
+            if (
+                !Number.isFinite(totalSize) ||
+                !Number.isFinite(freeSpace) ||
+                !Number.isFinite(targetUsage) ||
+                totalSize <= 0 ||
+                freeSpace < 0 ||
+                freeSpace > totalSize ||
+                targetUsage <= 0 ||
+                targetUsage > 100
+            ) {
+                resultDiv.innerHTML = `
+                    <div style="color: white; line-height: 1.8;">
+                        <strong>
+                            ⚠️ Please enter valid values.
+                            Target usage must be greater than 0%
+                            and no more than 100%.
+                        </strong>
+                    </div>
+                `;
+
                 resultDiv.style.display = "block";
                 progressBar.style.width = "0%";
                 return;
             }
 
-            if (totalSize < freeSpace) {
-                resultDiv.innerHTML =
-                    `<div style="color: black; line-height: 2;">
-                        <strong>⚠️ Total size must be greater than or equal to free space.</strong>
-                    </div>`;
-                resultDiv.style.display = "block";
-                progressBar.style.width = "0%";
-                return;
-            }
-
+            // Calculate used space and current usage
             const usedSpace = totalSize - freeSpace;
             const usagePercent = (usedSpace / totalSize) * 100;
 
-            // Update Progress Bar
+            // Update progress bar
             progressBar.style.width = `${usagePercent}%`;
-            if (usagePercent <= 70) {
-                progressBar.style.backgroundColor = "#00ff90"; // Green
+
+            if (usagePercent <= targetUsage) {
+                progressBar.style.backgroundColor = "#00ff90";
             } else if (usagePercent <= 85) {
-                progressBar.style.backgroundColor = "#f1c40f"; // Yellow
+                progressBar.style.backgroundColor = "#f1c40f";
             } else {
-                progressBar.style.backgroundColor = "#e74c3c"; // Red
+                progressBar.style.backgroundColor = "#e74c3c";
             }
 
-            // Already enough free space check
-            if (usagePercent <= 70) {
-                resultDiv.innerHTML =
-                    `<div style="color: #00ff90; line-height: 1.6; font-size: 16px;">
-                        ℹ️ <strong>Your disk already has enough free space (${usagePercent.toFixed(1)}% used).</strong><br>
+            // Check whether resizing is necessary
+            if (usagePercent <= targetUsage) {
+                resultDiv.innerHTML = `
+                    <div style="color: #00ff90; line-height: 1.6;
+                                font-size: 16px;">
+                        ℹ️ <strong>
+                            Your disk already has enough free space
+                            (${usagePercent.toFixed(1)}% used).
+                        </strong>
+                        <br><br>
                         No need to increase the total size.
-                    </div>`;
+                    </div>
+                `;
+
                 resultDiv.style.display = "block";
+                resultDiv.style.animation = "none";
+                void resultDiv.offsetWidth;
                 resultDiv.style.animation = "fadeSlideIn 0.8s ease";
                 return;
             }
 
-            // Calculate new size
-            const newSize = usedSpace / 0.7;
+            // Calculate the new required disk size
+            const newSize = usedSpace / (targetUsage / 100);
             const roundedSize = Math.ceil(newSize);
-            const additionalSpace = roundedSize - totalSize;
+            const additionalSpace = Math.max(
+                0,
+                roundedSize - totalSize
+            );
 
-            resultDiv.innerHTML =
-                `<div style="color: white; line-height: 1; font-size: 18px;">
-                    📊 <strong>Current usage: ${usagePercent.toFixed(1)}%</strong><br><br>
-                    ✅ <strong>New required total size: ${roundedSize} GB</strong><br><br>
-                    📈 <strong>Increase by: ${additionalSpace} GB</strong>
-                </div>`;
+            resultDiv.innerHTML = `
+                <div style="color: white; line-height: 1.6;
+                            font-size: 18px;">
+                    📊 <strong>
+                        Current usage: ${usagePercent.toFixed(1)}%
+                    </strong>
+                    <br><br>
+
+                    🎯 <strong>
+                        Target usage: ${targetUsage}%
+                    </strong>
+                    <br><br>
+
+                    ✅ <strong>
+                        New required total size: ${roundedSize} GB
+                    </strong>
+                    <br><br>
+
+                    📈 <strong>
+                        Increase by: ${additionalSpace} GB
+                    </strong>
+                </div>
+            `;
 
             resultDiv.style.display = "block";
+            resultDiv.style.animation = "none";
+            void resultDiv.offsetWidth;
             resultDiv.style.animation = "fadeSlideIn 0.8s ease";
         }
 
         function resetFields() {
-            document.getElementById("totalSize").value = '';
-            document.getElementById("freeSpace").value = '';
+            document.getElementById("totalSize").value = "";
+            document.getElementById("freeSpace").value = "";
+
+            // Restore default target usage
+            document.getElementById("targetUsage").value = "70";
+
             const resultDiv = document.getElementById("result");
             const progressBar = document.getElementById("progressBar");
-            resultDiv.innerHTML = '';
+
+            resultDiv.innerHTML = "";
             resultDiv.style.display = "none";
+
             progressBar.style.width = "0%";
+            progressBar.style.backgroundColor = "#00ff90";
         }
     </script>
 
